@@ -5,28 +5,27 @@ import TodoFilter from './components/TodoFilter/TodoFilter';
 import TodoModal from './components/TodoModal/TodoModal';
 import Loader from './components/Loader/Loader';
 
-// Визначаємо тип для Todo
 interface Todo {
   id: number;
   title: string;
   completed: boolean;
 }
 
-// Визначаємо тип для User
 interface User {
   id: number;
   name: string;
 }
 
 const App = () => {
-  const [todos, setTodos] = useState<Todo[]>([]); // Вказуємо тип для todos
-  const [filteredTodos, setFilteredTodos] = useState<Todo[]>([]); // Вказуємо тип для filteredTodos
-  const [loading, setLoading] = useState<boolean>(true); // Вказуємо тип для loading
-  const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null); // Вказуємо тип для selectedTodo
-  const [user, setUser] = useState<User | null>(null); // Вказуємо тип для user
-  const [query, setQuery] = useState<string>(''); // Вказуємо тип для query
-  const [statusFilter, setStatusFilter] = useState<string>('all'); // Вказуємо тип для statusFilter
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [filteredTodos, setFilteredTodos] = useState<Todo[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [query, setQuery] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
+  const userId = localStorage.getItem('userId') || '1';
   // Функція фільтрації
   // eslint-disable-next-line @typescript-eslint/no-shadow
   const filterTodos = (status: string, query: string) => {
@@ -47,51 +46,55 @@ const App = () => {
     setFilteredTodos(filtered);
   };
 
-  // Завантажуємо todos
   useEffect(() => {
     const fetchTodos = async () => {
       setLoading(true);
-      const todosData = await getTodos();
+      try {
+        const todosData = await getTodos();
 
-      setTodos(todosData);
-      setFilteredTodos(todosData);
-      setLoading(false);
+        setTodos(todosData);
+        setFilteredTodos(todosData);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error fetching todos:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchTodos();
   }, []);
 
-  // Завантажуємо користувача
   useEffect(() => {
     const fetchUser = async () => {
       setLoading(true);
-      const userData = await getUser(1); // замінити на реальний ID користувача
+      try {
+        const userData = await getUser(Number(userId));
 
-      setUser(userData);
-      setLoading(false);
+        setUser(userData);
+      } catch (error) {
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchUser();
-  }, []);
+  }, [userId]);
 
-  // Обробка фільтрації за заголовком
   const handleFilterByTitle = (newQuery: string) => {
-    setQuery(newQuery); // Оновлюємо стан query
-    filterTodos(statusFilter, newQuery); // Використовуємо нову змінну newQuery
+    setQuery(newQuery);
+    filterTodos(statusFilter, newQuery);
   };
 
-  // Обробка фільтрації за статусом
   const handleFilterByStatus = (status: string) => {
     setStatusFilter(status);
-    filterTodos(status, query); // Використовуємо query з state
+    filterTodos(status, query);
   };
 
-  // Показ модального вікна
   const handleShowTodoModal = (todo: Todo) => {
     setSelectedTodo(todo);
   };
 
-  // Закриття модального вікна
   const handleCloseModal = () => {
     setSelectedTodo(null);
   };
